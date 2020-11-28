@@ -6,6 +6,7 @@ export function spaceable(stack: string[] = []): Namespace {
       let spaceStack = Reflect.get(target, key);
       if (!spaceStack) {
         spaceStack = spaceable(target.concat(key as string));
+        Reflect.set(target, key, spaceStack);
       }
       return spaceStack;
     },
