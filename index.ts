@@ -17,10 +17,16 @@ export function useEventLite() {
     addToMap(spaceStack.concat(event).join(":"), fn);
   }
 
-  function space(name: string, fn: () => void) {
-    spaceStack.push(name);
-    fn();
-    spaceStack.pop();
+  function space(name: string | string[], fn: () => void) {
+    if (Array.isArray(name)) {
+      spaceStack.push(...name);
+      fn();
+      spaceStack.splice(spaceStack.length - name.length, name.length);
+    } else {
+      spaceStack.push(name);
+      fn();
+      spaceStack.pop();
+    }
   }
 
   function emit(event: string, ...args) {
