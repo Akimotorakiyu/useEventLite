@@ -1,14 +1,38 @@
-type Namespace = string[] & { [name: string]: Namespace };
+type Namespace = string[] & { [name: string]: Namespace } & {
+  on: (...args) => void;
+  emit: any;
+};
 
-export function spaceable(stack: string[] = []): Namespace {
+export function spaceable(stack: string[] = [], space?, on?, emit?): Namespace {
   const newstack = new Proxy(stack, {
     get(target, key) {
       let spaceStack = Reflect.get(target, key);
       if (!spaceStack) {
-        spaceStack = spaceable(target.concat(key as string));
+        spaceStack = spaceable(target.concat(key as string), space, on, emit);
         Reflect.set(target, key, spaceStack);
       }
       return spaceStack;
+    },
+    set(target, key, newValue) {
+      if (space) {
+        space(target, () => {
+          if (key == "on" && on) {
+            on("", newValue);
+          } else if (key == "emit" && emit) {
+            if (Array.isArray(newValue)) {
+              emit("", ...newValue);
+            } else {
+              emit("", newValue);
+            }
+          } else {
+            console.warn("you cant push something to space");
+          }
+        });
+      } else {
+        console.warn("you cant push something to space");
+      }
+
+      return true;
     },
   });
 

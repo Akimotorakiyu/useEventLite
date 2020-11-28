@@ -1,3 +1,4 @@
+import { spaceable } from "./spaceable";
 export function useEventLite() {
   const doMap = new Map<string, Set<(...args) => void>>();
   const spaceStack = [];
@@ -32,9 +33,12 @@ export function useEventLite() {
   function emit(event: string, ...args) {
     runListener(spaceStack.concat(event).join(":"), ...args);
   }
+
+  const portal = spaceable([], space, on, emit);
   return {
     on,
     space,
     emit,
+    portal,
   };
 }
