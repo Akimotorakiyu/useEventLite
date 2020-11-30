@@ -1,9 +1,12 @@
 import { spaceable } from "./spaceable";
+
+const membrane = "::";
+
 export function useEventLite() {
-  const doMap = new Map<string, Set<(...args) => void>>();
+  const doMap = new Map();
   const spaceStack = [];
 
-  function addToMap(event: string, fn: (...args) => void) {
+  function addToMap(event, fn) {
     let fnSet = doMap.get(event);
     if (!fnSet) {
       doMap.set(event, (fnSet = new Set()));
@@ -15,7 +18,7 @@ export function useEventLite() {
   }
 
   function on(event: string, fn: () => void) {
-    addToMap(spaceStack.concat(event).join(":"), fn);
+    addToMap(spaceStack.concat(event).join(membrane), fn);
   }
 
   function space(name: string | string[], fn: () => void) {
@@ -31,7 +34,7 @@ export function useEventLite() {
   }
 
   function emit(event: string, ...args) {
-    runListener(spaceStack.concat(event).join(":"), ...args);
+    runListener(spaceStack.concat(event).join(membrane), ...args);
   }
 
   const portal = spaceable([], space, on, emit);
