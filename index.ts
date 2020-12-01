@@ -84,7 +84,7 @@ export function useInvokeLite() {
   };
 }
 
-export function usePortal() {
+export function useEventPortal() {
   const { on, emit, remove, space } = useEventLite();
   const portal = portalable([], space, on, emit, remove);
   return {

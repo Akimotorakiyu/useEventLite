@@ -1,6 +1,6 @@
-import { usePortal } from "./index";
+import { useEventPortal } from "./index";
 
-const { portal } = usePortal();
+const { portal } = useEventPortal();
 
 const smile = (...something) => {
   console.log("smiling!", ...something);
