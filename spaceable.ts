@@ -3,6 +3,7 @@ type Namespace = string[] & { [name: string]: Namespace };
 type Portal = string[] & { [name: string]: Portal } & {
   on: (fn: (...args) => void) => void;
   emit: (...args) => void;
+  remove: (fn: (...args) => void) => void;
 };
 
 const onKey = "on";
