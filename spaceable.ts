@@ -1,11 +1,46 @@
 type Namespace = string[] & { [name: string]: Namespace } & {
-  on: (...args) => void;
-  emit: any;
+  on: (fn: (...args) => void) => void;
+  emit: (...args) => void;
 };
+
+const onKey = "on";
+const emitKey = "emit";
 
 export function spaceable(stack: string[] = [], space?, on?, emit?): Namespace {
   const newstack = new Proxy(stack, {
     get(target, key) {
+      console.log("...",target,key);
+      if (key == onKey) {
+        let onHandler;
+
+        if (!onHandler) {
+          onHandler = (fn) => {
+            space(target, () => {
+              on("", fn);
+            });
+          };
+
+          Reflect.set(target, key, onHandler);
+        }
+
+        return onHandler;
+      }
+      if (key == emitKey) {
+        let emitHandler;
+
+        if (!emitHandler) {
+          emitHandler = (...args) => {
+            space(target, () => {
+              emit("", ...args);
+            });
+          };
+
+          Reflect.set(target, key, emitHandler);
+        }
+
+        return emitHandler;
+      }
+
       let spaceStack = Reflect.get(target, key);
       if (!spaceStack) {
         spaceStack = spaceable(target.concat(key as string), space, on, emit);
@@ -13,27 +48,27 @@ export function spaceable(stack: string[] = [], space?, on?, emit?): Namespace {
       }
       return spaceStack;
     },
-    set(target, key, newValue) {
-      if (space) {
-        space(target, () => {
-          if (key == "on" && on) {
-            on("", newValue);
-          } else if (key == "emit" && emit) {
-            if (Array.isArray(newValue)) {
-              emit("", ...newValue);
-            } else {
-              emit("", newValue);
-            }
-          } else {
-            console.warn("you cant push something to space");
-          }
-        });
-      } else {
-        console.warn("you cant push something to space");
-      }
+    // set(target, key, newValue) {
+    //   if (space) {
+    //     space(target, () => {
+    //       if (key == onKey && on) {
+    //         on("", newValue);
+    //       } else if (key == emitKey && emit) {
+    //         if (Array.isArray(newValue)) {
+    //           emit("", ...newValue);
+    //         } else {
+    //           emit("", newValue);
+    //         }
+    //       } else {
+    //         console.warn("you cant push something to space");
+    //       }
+    //     });
+    //   } else {
+    //     console.warn("you cant push something to space");
+    //   }
 
-      return true;
-    },
+    //   return true;
+    // },
   });
 
   return newstack as Namespace;
