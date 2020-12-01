@@ -1,4 +1,6 @@
-type Namespace = string[] & { [name: string]: Namespace } & {
+type Namespace = string[] & { [name: string]: Namespace };
+
+type Portal = string[] & { [name: string]: Portal } & {
   on: (fn: (...args) => void) => void;
   emit: (...args) => void;
 };
@@ -8,111 +10,110 @@ const emitKey = "emit";
 const removeKey = "remove";
 
 export function spaceable(
-  stack: string[] = [],
-  space?,
-  on?,
-  emit?,
-  remove?
+  stack: string[],
+  interceptor?: (
+    target,
+    key,
+    reciver
+  ) => {
+    deal: boolean;
+    value: any;
+  }
 ): Namespace {
   const newstack = new Proxy(stack, {
-    get(target, key) {
-      console.log("...", target, key);
-      if (key == onKey) {
-        let onHandler;
-
-        if (!onHandler) {
-          onHandler = (fn) => {
-            space(target, () => {
-              on("", fn);
-            });
-          };
-
-          Reflect.set(target, key, onHandler);
+    get(target, key, reciver) {
+      if (interceptor) {
+        const temp = interceptor(target, key, reciver);
+        if (temp.deal) {
+          return temp.value;
         }
-
-        return onHandler;
-      }
-      if (key == emitKey) {
-        let emitHandler;
-
-        if (!emitHandler) {
-          emitHandler = (...args) => {
-            space(target, () => {
-              emit("", ...args);
-            });
-          };
-
-          Reflect.set(target, key, emitHandler);
-        }
-
-        return emitHandler;
       }
 
-      if (key == removeKey) {
-        let removeHandler;
-
-        if (!removeHandler) {
-          removeHandler = (fn) => {
-            space(target, () => {
-              remove("", fn);
-            });
-          };
-
-          Reflect.set(target, key, removeHandler);
-        }
-
-        return removeHandler;
-      }
-
-      let spaceStack = Reflect.get(target, key);
+      let spaceStack = Reflect.get(target, key, reciver);
       if (!spaceStack) {
-        spaceStack = spaceable(
-          target.concat(key as string),
-          space,
-          on,
-          emit,
-          remove
-        );
+        spaceStack = spaceable(target.concat(key as string), interceptor);
         Reflect.set(target, key, spaceStack);
       }
       return spaceStack;
     },
-    // set(target, key, newValue) {
-    //   if (space) {
-    //     space(target, () => {
-    //       if (key == onKey && on) {
-    //         on("", newValue);
-    //       } else if (key == emitKey && emit) {
-    //         if (Array.isArray(newValue)) {
-    //           emit("", ...newValue);
-    //         } else {
-    //           emit("", newValue);
-    //         }
-    //       } else {
-    //         console.warn("you cant push something to space");
-    //       }
-    //     });
-    //   } else {
-    //     console.warn("you cant push something to space");
-    //   }
-
-    //   return true;
-    // },
+    set() {
+      throw new Error("dont't throw anything into space!");
+    },
   });
 
   return newstack as Namespace;
 }
+export const namespace = spaceable([]);
 
-export const namespace = spaceable();
+export function portalable(
+  stack: string[],
+  space?,
+  on?,
+  emit?,
+  remove?
+): Portal {
+  const portal = spaceable(stack, (target, key) => {
+    if (key == onKey) {
+      let onHandler;
 
-// console.log(hub);
-// console.log(hub.eat);
-// console.log(hub.eat.drink);
-// console.log(hub.eat);
-// console.log(hub);
+      if (!onHandler) {
+        onHandler = (fn) => {
+          space(target, () => {
+            on("", fn);
+          });
+        };
 
-// console.log(hub);
-// console.log(hub.dundundun);
-// console.log(hub.dundundun.gegege);
-// console.log(hub.gegege);
-// console.log(hub);
+        Reflect.set(target, key, onHandler);
+      }
+
+      return {
+        deal: true,
+        value: onHandler,
+      };
+    }
+    if (key == emitKey) {
+      let emitHandler;
+
+      if (!emitHandler) {
+        emitHandler = (...args) => {
+          space(target, () => {
+            emit("", ...args);
+          });
+        };
+
+        Reflect.set(target, key, emitHandler);
+      }
+
+      return {
+        deal: true,
+        value: emitHandler,
+      };
+    }
+
+    if (key == removeKey) {
+      let removeHandler;
+
+      if (!removeHandler) {
+        removeHandler = (fn) => {
+          space(target, () => {
+            remove("", fn);
+          });
+        };
+
+        Reflect.set(target, key, removeHandler);
+      }
+
+      return {
+        deal: true,
+        value: removeHandler,
+      };
+    }
+
+    return {
+      deal: false,
+      value: null,
+    };
+  });
+
+  return portal as Portal;
+}

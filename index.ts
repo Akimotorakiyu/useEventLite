@@ -1,4 +1,4 @@
-import { spaceable } from "./spaceable";
+import { portalable, spaceable } from "./spaceable";
 import { useEventRepository } from "./useEventRepository";
 
 const membrane = "::";
@@ -35,8 +35,17 @@ export function useEventLite() {
     removeFromMap(tunnel(event), fn);
   }
 
-  const portal = spaceable([], space, on, emit, remove);
+  return {
+    on,
+    emit,
+    remove,
+    space,
+  };
+}
 
+export function usePortal() {
+  const { on, emit, remove, space } = useEventLite();
+  const portal = portalable([], space, on, emit, remove);
   return {
     on,
     emit,
