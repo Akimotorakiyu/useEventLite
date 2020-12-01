@@ -1,14 +1,21 @@
 type Namespace = string[] & { [name: string]: Namespace };
 
-type Portal = string[] & { [name: string]: Portal } & {
+type EventPortal = string[] & { [name: string]: EventPortal } & {
   on: (fn: (...args) => void) => void;
   emit: (...args) => void;
   remove: (fn: (...args) => void) => void;
 };
 
+type InvokePortal = string[] & { [name: string]: InvokePortal } & {
+  on: (fn: (ctx, next) => void) => void;
+  invoke: (ctx) => Promise<any>;
+  remove: () => void;
+};
+
 const onKey = "on";
 const emitKey = "emit";
 const removeKey = "remove";
+const invokeKey = "invoke";
 
 export function spaceable(
   stack: string[],
@@ -46,13 +53,13 @@ export function spaceable(
 }
 export const namespace = spaceable([]);
 
-export function portalable(
+export function eventPortal(
   stack: string[],
   space?,
   on?,
   emit?,
   remove?
-): Portal {
+): EventPortal {
   const portal = spaceable(stack, (target, key) => {
     if (key == onKey) {
       let onHandler;
@@ -77,9 +84,14 @@ export function portalable(
 
       if (!emitHandler) {
         emitHandler = (...args) => {
-          space(target, () => {
-            emit("", ...args);
-          });
+          let res;
+          try {
+            space(target, () => {
+              res = emit("", ...args);
+            });
+          } finally {
+            return res;
+          }
         };
 
         Reflect.set(target, key, emitHandler);
@@ -116,5 +128,83 @@ export function portalable(
     };
   });
 
-  return portal as Portal;
+  return portal as EventPortal;
+}
+
+export function invokePortal(
+  stack: string[],
+  space?,
+  on?,
+  invoke?,
+  remove?
+): InvokePortal {
+  const portal = spaceable(stack, (target, key) => {
+    if (key == onKey) {
+      let onHandler;
+
+      if (!onHandler) {
+        onHandler = (fn) => {
+          space(target, () => {
+            on("", fn);
+          });
+        };
+
+        Reflect.set(target, key, onHandler);
+      }
+
+      return {
+        deal: true,
+        value: onHandler,
+      };
+    }
+    if (key == invokeKey) {
+      let invokeHandler;
+
+      if (!invokeHandler) {
+        invokeHandler = (ctx) => {
+          let res;
+          try {
+            space(target, () => {
+              res = invoke("", ctx);
+            });
+          } finally {
+            return res;
+          }
+        };
+
+        Reflect.set(target, key, invokeHandler);
+      }
+
+      return {
+        deal: true,
+        value: invokeHandler,
+      };
+    }
+
+    if (key == removeKey) {
+      let removeHandler;
+
+      if (!removeHandler) {
+        removeHandler = (fn) => {
+          space(target, () => {
+            remove("");
+          });
+        };
+
+        Reflect.set(target, key, removeHandler);
+      }
+
+      return {
+        deal: true,
+        value: removeHandler,
+      };
+    }
+
+    return {
+      deal: false,
+      value: null,
+    };
+  });
+
+  return portal as InvokePortal;
 }

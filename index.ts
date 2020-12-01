@@ -1,4 +1,4 @@
-import { portalable } from "./spaceable";
+import { eventPortal, invokePortal } from "./spaceable";
 import { useEventRepository } from "./useEventRepository";
 import { useInvokeRepository } from "./useInvokeRepository";
 
@@ -84,9 +84,21 @@ export function useInvokeLite() {
   };
 }
 
+export function useInvokePortal() {
+  const { on, invoke, remove, space } = useInvokeLite();
+  const portal = invokePortal([], space, on, invoke, remove);
+  return {
+    on,
+    invoke,
+    remove,
+    space,
+    portal,
+  };
+}
+
 export function useEventPortal() {
   const { on, emit, remove, space } = useEventLite();
-  const portal = portalable([], space, on, emit, remove);
+  const portal = eventPortal([], space, on, emit, remove);
   return {
     on,
     emit,
