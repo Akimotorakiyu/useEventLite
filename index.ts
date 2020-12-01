@@ -35,7 +35,7 @@ export function useEventLite() {
     removeFromMap(tunnel(event), fn);
   }
 
-  const portal = spaceable([], space, on, emit);
+  const portal = spaceable([], space, on, emit, remove);
 
   return {
     on,

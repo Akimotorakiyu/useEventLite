@@ -5,11 +5,18 @@ type Namespace = string[] & { [name: string]: Namespace } & {
 
 const onKey = "on";
 const emitKey = "emit";
+const removeKey = "remove";
 
-export function spaceable(stack: string[] = [], space?, on?, emit?): Namespace {
+export function spaceable(
+  stack: string[] = [],
+  space?,
+  on?,
+  emit?,
+  remove?
+): Namespace {
   const newstack = new Proxy(stack, {
     get(target, key) {
-      console.log("...",target,key);
+      console.log("...", target, key);
       if (key == onKey) {
         let onHandler;
 
@@ -41,9 +48,31 @@ export function spaceable(stack: string[] = [], space?, on?, emit?): Namespace {
         return emitHandler;
       }
 
+      if (key == removeKey) {
+        let removeHandler;
+
+        if (!removeHandler) {
+          removeHandler = (fn) => {
+            space(target, () => {
+              remove("", fn);
+            });
+          };
+
+          Reflect.set(target, key, removeHandler);
+        }
+
+        return removeHandler;
+      }
+
       let spaceStack = Reflect.get(target, key);
       if (!spaceStack) {
-        spaceStack = spaceable(target.concat(key as string), space, on, emit);
+        spaceStack = spaceable(
+          target.concat(key as string),
+          space,
+          on,
+          emit,
+          remove
+        );
         Reflect.set(target, key, spaceStack);
       }
       return spaceStack;
