@@ -1,5 +1,5 @@
 export function useEventRepository() {
-  const doMap = new Map<string, Set<(...args) => void>>();
+  const doMap = new Map<string, Set<(...args) => unknown>>();
 
   function addToMap(event: string, fn) {
     let fnSet = doMap.get(event);
@@ -20,7 +20,13 @@ export function useEventRepository() {
   }
 
   function runListener(event: string, ...args) {
-    doMap.get(event)?.forEach((fn) => fn(...args));
+    const result = [];
+    
+    doMap.get(event)?.forEach((fn) => {
+      result.push(fn(...args));
+    });
+
+    return result;
   }
 
   return {
