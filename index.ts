@@ -3,7 +3,7 @@ import { spaceable } from "./spaceable";
 const membrane = "::";
 
 export function useEventLite() {
-  const doMap = new Map();
+  const doMap = new Map<string, Set<(...args) => void>>();
   const spaceStack = [];
 
   function addToMap(event, fn) {
@@ -13,6 +13,17 @@ export function useEventLite() {
     }
     fnSet.add(fn);
   }
+
+  function removeFromMap(event, fn) {
+    let fnSet = doMap.get(event);
+    if (fnSet) {
+      fnSet.delete(fn);
+      if (fnSet.size == 0) {
+        doMap.delete(event);
+      }
+    }
+  }
+
   function runListener(event: string, ...args) {
     doMap.get(event)?.forEach((fn) => fn(...args));
   }
@@ -37,11 +48,17 @@ export function useEventLite() {
     runListener(spaceStack.concat(event).join(membrane), ...args);
   }
 
+  function remove(event: String, fn) {
+    removeFromMap(spaceStack.concat(event).join(membrane), fn);
+  }
+
   const portal = spaceable([], space, on, emit);
+
   return {
     on,
-    space,
     emit,
+    remove,
+    space,
     portal,
   };
 }
