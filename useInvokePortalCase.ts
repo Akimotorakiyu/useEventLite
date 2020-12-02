@@ -16,7 +16,7 @@ portal.echo.on((ctx, next) => {
 
 portal.echo
   .invoke({
-    info: "fish",
+    foods: ["fish", "water"],
   })
   .then(console.log);
 
