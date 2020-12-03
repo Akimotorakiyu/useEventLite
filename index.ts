@@ -9,7 +9,7 @@ export function useEventLite() {
 
   const { addToMap, runListener, removeFromMap } = useEventRepository();
   function on(event: string, fn: (...args) => void) {
-    addToMap(spaceStack.concat(event).join(membrane), fn);
+    return addToMap(spaceStack.concat(event).join(membrane), fn);
   }
 
   function tunnel(event: string) {

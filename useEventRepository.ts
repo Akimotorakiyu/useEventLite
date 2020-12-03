@@ -7,6 +7,10 @@ export function useEventRepository() {
       doMap.set(event, (fnSet = new Set()));
     }
     fnSet.add(fn);
+
+    return () => {
+      removeFromMap(event, fn);
+    };
   }
 
   function removeFromMap(event: string, fn) {
@@ -21,7 +25,7 @@ export function useEventRepository() {
 
   function runListener(event: string, ...args) {
     const result = [];
-    
+
     doMap.get(event)?.forEach((fn) => {
       result.push(fn(...args));
     });
