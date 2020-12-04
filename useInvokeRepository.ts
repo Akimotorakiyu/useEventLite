@@ -1,4 +1,20 @@
-function theNext(ctx, middleware, index) {
+export type Middleware = (
+  ctx: unknown,
+  next: () => Promise<void> | void
+) => Promise<void> | void;
+type TheNext = (
+  ctx: unknown,
+  middleware: Middleware[],
+  index: number
+) => Promise<void> | void;
+
+type Callback = (...args: unknown[]) => unknown;
+
+function theNext(
+  ctx: unknown,
+  middleware: Middleware[],
+  index: number
+): Promise<void> | void {
   const fn = middleware[index];
   if (fn) {
     return fn(ctx, () => {
@@ -7,16 +23,16 @@ function theNext(ctx, middleware, index) {
   }
 }
 
-function onionRings(middleware) {
-  return (ctx) => {
+function onionRings(middleware: Middleware[]) {
+  return (ctx: unknown) => {
     return theNext(ctx, middleware, 0);
   };
 }
 
 export function useInvokeRepository() {
-  const doMap = new Map<string, Array<(...args) => void>>();
+  const doMap = new Map<string, Middleware[]>();
 
-  function addToMap(event: string, fn) {
+  function addToMap(event: string, fn: Middleware) {
     let fnArray = doMap.get(event);
     if (!fnArray) {
       doMap.set(event, (fnArray = []));
@@ -30,7 +46,7 @@ export function useInvokeRepository() {
 
   async function runListener(event: string, ctx: any) {
     const middleware = doMap.get(event);
-    if (middleware?.length > 0) {
+    if (middleware && middleware?.length > 0) {
       const runner = onionRings(middleware);
       await runner(ctx);
       return ctx;

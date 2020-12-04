@@ -18,20 +18,32 @@ invoke("echo", {
   info: "fish",
 }).then(console.log);
 
+interface CTX {
+  foods: string[];
+}
+
+function isT<T>(it: unknown): it is T {
+  return true;
+}
+
 async function eat() {
   on("eat", async (ctx, next) => {
-    await sleep(1000);
-    console.log(1);
-    ctx.foods.splice(0, 1);
-    await next();
+    if (isT<CTX>(ctx)) {
+      await sleep(1000);
+      console.log(1);
+      ctx.foods.splice(0, 1);
+      await next();
+    }
   });
 
   on("eat", async (ctx, next) => {
-    await sleep(1000);
-    console.log(2);
-    ctx.foods.splice(0, 1);
+    if (isT<CTX>(ctx)) {
+      await sleep(1000);
+      console.log(2);
+      ctx.foods.splice(0, 1);
 
-    await next();
+      await next();
+    }
   });
 
   console.log("3", await invoke("eat", { foods: ["fish", "water"] }));

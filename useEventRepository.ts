@@ -1,7 +1,8 @@
+type Callback = (...args: unknown[]) => unknown;
 export function useEventRepository() {
-  const doMap = new Map<string, Set<(...args) => unknown>>();
+  const doMap = new Map<string, Set<Callback>>();
 
-  function addToMap(event: string, fn) {
+  function addToMap(event: string, fn: Callback) {
     let fnSet = doMap.get(event);
     if (!fnSet) {
       doMap.set(event, (fnSet = new Set()));
@@ -13,7 +14,7 @@ export function useEventRepository() {
     };
   }
 
-  function removeFromMap(event: string, fn) {
+  function removeFromMap(event: string, fn: Callback) {
     let fnSet = doMap.get(event);
     if (fnSet) {
       fnSet.delete(fn);
@@ -23,8 +24,8 @@ export function useEventRepository() {
     }
   }
 
-  function runListener(event: string, ...args) {
-    const result = [];
+  function runListener(event: string, ...args: unknown[]) {
+    const result: unknown[] = [];
 
     doMap.get(event)?.forEach((fn) => {
       result.push(fn(...args));

@@ -1,14 +1,15 @@
 import { eventPortal, invokePortal } from "./spaceable";
 import { useEventRepository } from "./useEventRepository";
-import { useInvokeRepository } from "./useInvokeRepository";
+import { useInvokeRepository, Middleware } from "./useInvokeRepository";
+type Callback = (...args: unknown[]) => unknown;
 
 const membrane = "::";
 
 export function useEventLite() {
-  const spaceStack = [];
+  const spaceStack: string[] = [];
 
   const { addToMap, runListener, removeFromMap } = useEventRepository();
-  function on(event: string, fn: (...args) => void) {
+  function on(event: string, fn: (...args: unknown[]) => void) {
     return addToMap(spaceStack.concat(event).join(membrane), fn);
   }
 
@@ -28,11 +29,11 @@ export function useEventLite() {
     }
   }
 
-  function emit(event: string, ...args) {
+  function emit(event: string, ...args: unknown[]) {
     return runListener(tunnel(event), ...args);
   }
 
-  function remove(event: string, fn) {
+  function remove(event: string, fn: Callback) {
     removeFromMap(tunnel(event), fn);
   }
 
@@ -45,10 +46,10 @@ export function useEventLite() {
 }
 
 export function useInvokeLite() {
-  const spaceStack = [];
+  const spaceStack: string[] = [];
 
   const { addToMap, runListener, removeFromMap } = useInvokeRepository();
-  function on(event: string, fn: (...args) => void) {
+  function on(event: string, fn: Middleware) {
     addToMap(spaceStack.concat(event).join(membrane), fn);
   }
 
@@ -68,7 +69,7 @@ export function useInvokeLite() {
     }
   }
 
-  function invoke(event: string, ctx) {
+  function invoke(event: string, ctx: unknown) {
     return runListener(tunnel(event), ctx);
   }
 

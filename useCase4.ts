@@ -2,7 +2,7 @@ import { useEventPortal } from "./index";
 
 const { portal } = useEventPortal();
 
-const smile = (...something) => {
+const smile = (...something: unknown[]) => {
   console.log("smiling!", ...something);
 };
 
