@@ -49,8 +49,8 @@ export function useInvokeRepository() {
     if (middleware && middleware?.length > 0) {
       const runner = onionRings(middleware);
       await runner(ctx);
-      return ctx;
     }
+    return ctx;
   }
 
   return {
